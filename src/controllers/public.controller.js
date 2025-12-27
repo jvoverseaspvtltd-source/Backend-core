@@ -56,10 +56,12 @@ exports.intake = async (req, res) => {
             emailDetails.intake = `${details.intakeMonth} ${details.intakeYear}`;
         }
 
-        // Send professional confirmation email (Non-blocking fallback)
-        emailService.sendProfessionalEnquiryConfirmation(email, name, enquiryType, emailDetails)
-            .then(() => logger.info(`✅ Confirmation email sent to ${email}`))
-            .catch(err => logger.error(`❌ Background email failed for ${email}: ${err.message}`));
+        // Send professional confirmation email synchronously
+        try {
+            await emailService.sendProfessionalEnquiryConfirmation(email, name, enquiryType, emailDetails);
+        } catch (emailErr) {
+            logger.error(`❌ Non-blocking email error for ${email}: ${emailErr.message}`);
+        }
 
         // Return success response with saved lead data
         res.json({
@@ -205,9 +207,12 @@ exports.comprehensiveEligibility = async (req, res) => {
 
         await record.save();
 
-        // 5. Send Confirmation (Non-blocking)
-        emailService.sendEligibilityConfirmation(emailId, fullName, isEligible, `₹30 Lakhs – ₹50 Lakhs`)
-            .catch(err => logger.error(`Background Email error:`, err));
+        // 5. Send Confirmation (Synchronous)
+        try {
+            await emailService.sendEligibilityConfirmation(emailId, fullName, isEligible, `₹30 Lakhs – ₹50 Lakhs`);
+        } catch (emailErr) {
+            logger.error(`❌ Eligibility email failed: ${emailErr.message}`);
+        }
 
         // 6. Return Result with specific format
         res.json({
@@ -279,9 +284,12 @@ exports.checkEligibility = async (req, res) => {
 
         await record.save();
 
-        // 4. Send Confirmation Email (Non-blocking)
-        emailService.sendEligibilityConfirmation(email, name, isEligible, estimatedRange)
-            .catch(err => logger.error(`Background Email error for ${email}:`, err));
+        // 4. Send Confirmation Email (Synchronous)
+        try {
+            await emailService.sendEligibilityConfirmation(email, name, isEligible, estimatedRange);
+        } catch (emailErr) {
+            logger.error(`❌ Simple eligibility email failed: ${emailErr.message}`);
+        }
 
 
         // 5. Return Result
