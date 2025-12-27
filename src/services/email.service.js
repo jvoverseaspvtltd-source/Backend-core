@@ -7,9 +7,7 @@ const path = require('path');
 logger.info(`Email configuration: Service=${config.emailService}, User=${config.emailUser ? 'SET' : 'MISSING'}, Pass=${config.emailPass ? 'SET' : 'MISSING'}`);
 
 const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false, // Use STARTTLS
+    service: 'gmail',
     pool: true,
     maxConnections: 3,
     maxMessages: 100,
@@ -18,11 +16,11 @@ const transporter = nodemailer.createTransport({
         pass: config.emailPass,
     },
     tls: {
-        rejectUnauthorized: false // Helps bypass certain cloud network restrictions
+        rejectUnauthorized: false
     },
-    connectionTimeout: 15000,
-    greetingTimeout: 10000,
-    socketTimeout: 20000,
+    connectionTimeout: 20000, // Increased timeout
+    greetingTimeout: 15000,
+    socketTimeout: 30000,
 });
 
 // Verify transporter configuration with more detail

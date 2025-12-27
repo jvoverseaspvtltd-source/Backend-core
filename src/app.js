@@ -14,6 +14,9 @@ const lmsRoutes = require('./routes/lms.routes');
 
 const app = express();
 
+// Trust Render's proxy
+app.set('trust proxy', 1);
+
 // Connect Database
 connectDB();
 
