@@ -7,8 +7,8 @@ dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 const requiredEnvVars = [
   'MONGO_URI',
   'JWT_SECRET',
-  'EMAIL_USER',
-  'EMAIL_PASS'
+  'EMAIL_PROVIDER',
+  'BREVO_API_KEY'
 ];
 
 // Check for missing env vars
@@ -29,9 +29,15 @@ module.exports = {
   mongoUri: process.env.MONGO_URI,
   jwtSecret: process.env.JWT_SECRET,
   nodeEnv,
-  emailService: process.env.EMAIL_SERVICE || 'gmail',
-  emailUser: process.env.EMAIL_USER?.trim(),
-  emailPass: process.env.EMAIL_PASS?.trim(),
+
+  // Brevo Email Configuration
+  emailProvider: process.env.EMAIL_PROVIDER || 'brevo-smtp', // 'brevo-smtp' or 'brevo-api'
+  brevoApiKey: process.env.BREVO_API_KEY?.trim(),
+  brevoSmtpUser: process.env.BREVO_SMTP_USER?.trim(),
+  brevoSmtpPass: process.env.BREVO_SMTP_PASS?.trim(),
+  emailFromName: process.env.EMAIL_FROM_NAME || 'JV Overseas',
+  emailFromAddress: process.env.EMAIL_FROM_ADDRESS?.trim() || 'jvoverseaspvtltd@gmail.com',
+
   allowedOrigins: nodeEnv === 'development' ? ['http://localhost:3000', 'http://localhost:3001', 'http://127.0.0.1:3000', 'http://127.0.0.1:3001'] : allowedOrigins,
   superAdmin: {
     email: process.env.SUPER_ADMIN_EMAIL,
