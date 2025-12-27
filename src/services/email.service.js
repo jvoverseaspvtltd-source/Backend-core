@@ -4,6 +4,15 @@ const logger = require('../utils/logger');
 const path = require('path');
 const fs = require('fs');
 
+// Validate email configuration on startup
+if (!config.emailUser || !config.emailPass) {
+    logger.error('❌ CRITICAL: EMAIL_USER or EMAIL_PASS not configured!');
+    logger.error('Environment Check:');
+    logger.error(`  EMAIL_USER: ${config.emailUser ? '✓ Set' : '✗ MISSING'}`);
+    logger.error(`  EMAIL_PASS: ${config.emailPass ? '✓ Set (length: ' + config.emailPass.length + ')' : '✗ MISSING'}`);
+    logger.error('Please set these environment variables in Render dashboard.');
+}
+
 // Create transporter using Port 465 (Secure) as per Render requirements
 const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
@@ -16,15 +25,43 @@ const transporter = nodemailer.createTransport({
     connectionTimeout: 10000, // 10s timeout
     greetingTimeout: 5000,
     socketTimeout: 15000,
+    logger: false, // Disable nodemailer's internal logging to avoid clutter
+    debug: false,
 });
 
-// Verify connection on startup
+// Verify connection on startup with detailed diagnostics
+logger.info('🔍 Initializing Email Service...');
+logger.info(`   Using: ${config.emailUser || 'NOT CONFIGURED'}`);
+logger.info(`   Environment: ${config.nodeEnv || 'unknown'}`);
+
 transporter.verify((error) => {
     if (error) {
-        logger.error(`❌ SMTP Status: Connection Failed (${error.code})`);
-        logger.error(`Detail: ${error.message}`);
+        logger.error('❌ SMTP CONNECTION FAILED');
+        logger.error(`   Error Code: ${error.code || 'UNKNOWN'}`);
+        logger.error(`   Error Message: ${error.message}`);
+
+        // Provide specific troubleshooting based on error type
+        if (error.code === 'EAUTH' || error.message.includes('Username and Password not accepted')) {
+            logger.error('   ⚠️  AUTHENTICATION FAILED - Possible causes:');
+            logger.error('      1. EMAIL_PASS is not a Gmail App Password (must be 16 characters)');
+            logger.error('      2. Environment variables not set in Render dashboard');
+            logger.error('      3. App Password was revoked or expired');
+            logger.error('   📝 Fix: Generate new App Password at https://myaccount.google.com/apppasswords');
+        } else if (error.code === 'ETIMEDOUT' || error.code === 'ECONNECTION') {
+            logger.error('   ⚠️  CONNECTION TIMEOUT - Possible causes:');
+            logger.error('      1. Render firewall blocking port 465');
+            logger.error('      2. Gmail blocking Render IP addresses');
+            logger.error('      3. Network connectivity issues');
+            logger.error('   📝 Consider using SendGrid or other SMTP service for production');
+        } else if (error.code === 'EDNS') {
+            logger.error('   ⚠️  DNS RESOLUTION FAILED');
+            logger.error('      Cannot resolve smtp.gmail.com');
+        }
+
+        logger.error('   ⚠️  EMAILS WILL NOT BE SENT UNTIL THIS IS FIXED!');
     } else {
-        logger.info('✅ SMTP Status: Ready for Port 465');
+        logger.info('✅ SMTP Status: Connected and Ready');
+        logger.info(`   Sending from: ${config.emailUser}`);
     }
 });
 

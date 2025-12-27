@@ -58,9 +58,15 @@ exports.intake = async (req, res) => {
 
         // Send professional confirmation email synchronously
         try {
+            logger.info(`📧 Attempting to send confirmation email to ${email}...`);
             await emailService.sendProfessionalEnquiryConfirmation(email, name, enquiryType, emailDetails);
+            logger.info(`✅ Confirmation email sent successfully to ${email}`);
         } catch (emailErr) {
-            logger.error(`❌ Non-blocking email error for ${email}: ${emailErr.message}`);
+            logger.error(`❌ Email send failed for ${email}`);
+            logger.error(`   Error Code: ${emailErr.code || 'UNKNOWN'}`);
+            logger.error(`   Error Message: ${emailErr.message}`);
+            logger.error(`   Stack: ${emailErr.stack}`);
+            // Non-blocking - continue with response even if email fails
         }
 
         // Return success response with saved lead data
