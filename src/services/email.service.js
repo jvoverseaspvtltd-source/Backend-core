@@ -8,14 +8,17 @@ logger.info(`Email configuration: Service=${config.emailService}, User=${config.
 
 const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
-    port: 465,
-    secure: true, // Use SSL/TLS
+    port: 587,
+    secure: false, // Use STARTTLS
     pool: true,
     maxConnections: 3,
     maxMessages: 100,
     auth: {
         user: config.emailUser,
         pass: config.emailPass,
+    },
+    tls: {
+        rejectUnauthorized: false // Helps bypass certain cloud network restrictions
     },
     connectionTimeout: 15000,
     greetingTimeout: 10000,
@@ -102,7 +105,7 @@ const sendEligibilityConfirmation = async (userEmail, userName, isEligible, esti
         const mailOptions = getBaseMailOptions(userEmail, 'Loan Eligibility Check - JV Overseas', html);
         logger.info(`Attempting to send eligibility email to ${userEmail}...`);
         const info = await transporter.sendMail(mailOptions);
-        logger.info(`✅ Eligibility email sent successfully to ${userEmail}. MessageId: ${info.messageId}`);
+        logger.info(`✅ Eligibility email sent: ID=${info.messageId}, Accepted=${info.accepted}, Rejected=${info.rejected}`);
     } catch (error) {
         logger.error(`❌ Eligibility email failed for ${userEmail}: ${error.message}`);
         if (error.stack) logger.error(error.stack);
@@ -152,7 +155,7 @@ const sendProfessionalEnquiryConfirmation = async (userEmail, userName, enquiryT
         const mailOptions = getBaseMailOptions(userEmail, `Enquiry Received - JV Overseas`, html);
         logger.info(`Attempting to send professional enquiry email to ${userEmail} for type: ${enquiryType}...`);
         const info = await transporter.sendMail(mailOptions);
-        logger.info(`✅ Professional email sent successfully to ${userEmail}. MessageId: ${info.messageId}`);
+        logger.info(`✅ Professional email sent: ID=${info.messageId}, Accepted=${info.accepted}, Rejected=${info.rejected}`);
     } catch (error) {
         logger.error(`❌ Professional email failed for ${userEmail}: ${error.message}`);
         if (error.stack) logger.error(error.stack);
