@@ -31,14 +31,19 @@ const transporter = nodemailer.createTransport({
 if (!config.sendgridApiKey) {
     transporter.verify((error) => {
         if (error) {
-            logger.error(`❌ SMTP Connection failed: ${error.message}`);
-            logger.warn('This is likely a firewall block. SendGrid API is recommended.');
+            logger.error('****************************************************************');
+            logger.error('🛑 CRITICAL ERROR: RENDER.COM IS BLOCKING GMAIL SMTP PORTS');
+            logger.error(`Error Detail: ${error.message}`);
+            logger.error('REASON: Render free tier blocks outbound ports 25, 465, and 587.');
+            logger.error('FIX: You MUST add SENDGRID_API_KEY to your Render Environment Variables.');
+            logger.error('SEE DOCS: https://render.com/docs/smtp-blocking');
+            logger.error('****************************************************************');
         } else {
-            logger.info('✅ SMTP server is ready');
+            logger.info('✅ SMTP server is ready (Local Environment)');
         }
     });
 } else {
-    logger.info('🚀 SendGrid API mode enabled');
+    logger.info('🚀 SendGrid API mode enabled (Firewall Bypass Active)');
 }
 
 // Constants for branding

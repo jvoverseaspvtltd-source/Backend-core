@@ -14,8 +14,8 @@ const lmsRoutes = require('./routes/lms.routes');
 
 const app = express();
 
-// Trust Render's proxy (Essential for Rate Limiting)
-app.set('trust proxy', true);
+// Trust Render's proxy (1 layer for Render Load Balancer)
+app.set('trust proxy', 1);
 
 // Connect Database
 connectDB();
