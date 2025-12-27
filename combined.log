@@ -569,3 +569,9 @@
 {"level":"info","message":"Environment: development","service":"backend-service","timestamp":"2025-12-26T11:07:42.867Z"}
 {"level":"info","message":"MongoDB Connected...","service":"backend-service","timestamp":"2025-12-26T11:07:43.243Z"}
 {"level":"info","message":"Email server is ready to send messages","service":"backend-service","timestamp":"2025-12-26T11:07:44.242Z"}
+{"level":"info","message":"Starting manual email test...","service":"backend-service","timestamp":"2025-12-27T06:22:41.269Z"}
+{"level":"info","message":"Attempting to send professional enquiry email to jvoverseaspvtltd@gmail.com for type: Test Service...","service":"backend-service","timestamp":"2025-12-27T06:22:41.271Z"}
+{"level":"info","message":"Email server is ready to send messages","service":"backend-service","timestamp":"2025-12-27T06:22:43.384Z"}
+{"level":"info","message":"✅ Professional email sent successfully to jvoverseaspvtltd@gmail.com. MessageId: <bed6059c-eb9b-68e6-71c9-d2d12cfb55d6@gmail.com>","service":"backend-service","timestamp":"2025-12-27T06:22:45.778Z"}
+{"level":"info","message":"Attempting to send eligibility email to jvoverseaspvtltd@gmail.com...","service":"backend-service","timestamp":"2025-12-27T06:22:45.780Z"}
+{"level":"info","message":"✅ Eligibility email sent successfully to jvoverseaspvtltd@gmail.com. MessageId: <993e17ab-4494-cd2f-07e1-baa23c68fe90@gmail.com>","service":"backend-service","timestamp":"2025-12-27T06:22:50.529Z"}

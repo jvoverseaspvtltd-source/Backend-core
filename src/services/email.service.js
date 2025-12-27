@@ -71,10 +71,12 @@ const sendEligibilityConfirmation = async (userEmail, userName, isEligible, esti
         `;
 
         const mailOptions = getBaseMailOptions(userEmail, 'Loan Eligibility Check - JV Overseas', html);
-        await transporter.sendMail(mailOptions);
-        logger.info(`Eligibility email sent to ${userEmail}`);
+        logger.info(`Attempting to send eligibility email to ${userEmail}...`);
+        const info = await transporter.sendMail(mailOptions);
+        logger.info(`✅ Eligibility email sent successfully to ${userEmail}. MessageId: ${info.messageId}`);
     } catch (error) {
-        logger.error(`Eligibility email failed: ${error.message}`);
+        logger.error(`❌ Eligibility email failed for ${userEmail}: ${error.message}`);
+        if (error.stack) logger.error(error.stack);
     }
 };
 
@@ -119,10 +121,12 @@ const sendProfessionalEnquiryConfirmation = async (userEmail, userName, enquiryT
         `;
 
         const mailOptions = getBaseMailOptions(userEmail, `Enquiry Received - JV Overseas`, html);
-        await transporter.sendMail(mailOptions);
-        logger.info(`Professional email sent to ${userEmail}`);
+        logger.info(`Attempting to send professional enquiry email to ${userEmail} for type: ${enquiryType}...`);
+        const info = await transporter.sendMail(mailOptions);
+        logger.info(`✅ Professional email sent successfully to ${userEmail}. MessageId: ${info.messageId}`);
     } catch (error) {
-        logger.error(`Professional email failed: ${error.message}`);
+        logger.error(`❌ Professional email failed for ${userEmail}: ${error.message}`);
+        if (error.stack) logger.error(error.stack);
     }
 };
 
