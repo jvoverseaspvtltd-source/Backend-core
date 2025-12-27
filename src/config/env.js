@@ -38,5 +38,6 @@ module.exports = {
     password: process.env.SUPER_ADMIN_PASS
   },
   crmUrl: process.env.CRM_URL || '#',
-  lmsUrl: process.env.LMS_URL || '#'
+  lmsUrl: process.env.LMS_URL || '#',
+  sendgridApiKey: process.env.SENDGRID_API_KEY
 };
