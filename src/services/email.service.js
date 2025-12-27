@@ -3,42 +3,71 @@ const config = require('../config/env');
 const logger = require('../utils/logger');
 const path = require('path');
 
-// Create transporter using Gmail (Modern configuration)
+// Log configuration status (masked)
+logger.info(`Email configuration: Service=${config.emailService}, User=${config.emailUser ? 'SET' : 'MISSING'}, Pass=${config.emailPass ? 'SET' : 'MISSING'}`);
+
 const transporter = nodemailer.createTransport({
-    service: config.emailService,
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true, // Use SSL/TLS
+    pool: true,
+    maxConnections: 3,
+    maxMessages: 100,
     auth: {
         user: config.emailUser,
         pass: config.emailPass,
     },
+    connectionTimeout: 15000,
+    greetingTimeout: 10000,
+    socketTimeout: 20000,
 });
 
-// Verify transporter configuration
-transporter.verify((error) => {
+// Verify transporter configuration with more detail
+transporter.verify((error, success) => {
     if (error) {
-        logger.warn(`Email service initialization failed: ${error.message}. Emails will not be sent.`);
+        logger.error(`❌ Email service verification failed: ${error.message}`);
+        if (error.code) logger.error(`Error Code: ${error.code}`);
+        if (error.command) logger.error(`Command: ${error.command}`);
+        logger.warn('Emails will not be sent until the issue is resolved.');
     } else {
-        logger.info('Email server is ready to send messages');
+        logger.info('✅ Email server is ready to send messages');
     }
 });
+
+const fs = require('fs');
 
 // Constants for branding
 const LOGO_CID = 'jv-logo';
 const LOGO_PATH = path.join(__dirname, '../../assets/logo.webp');
 
+// Verify logo existence at startup
+if (!fs.existsSync(LOGO_PATH)) {
+    logger.warn(`LOGO NOT FOUND at: ${LOGO_PATH}. Emails will be sent without logo.`);
+} else {
+    logger.info(`Logo verified at: ${LOGO_PATH}`);
+}
+
 /**
  * Standardized mail options with branding
  */
-const getBaseMailOptions = (to, subject, htmlContent) => ({
-    from: `"JV Overseas" <${config.emailUser}>`,
-    to,
-    subject,
-    html: htmlContent,
-    attachments: [{
-        filename: 'logo.webp',
-        path: LOGO_PATH,
-        cid: LOGO_CID
-    }]
-});
+const getBaseMailOptions = (to, subject, htmlContent) => {
+    const options = {
+        from: `"JV Overseas" <${config.emailUser}>`,
+        to,
+        subject,
+        html: htmlContent,
+    };
+
+    if (fs.existsSync(LOGO_PATH)) {
+        options.attachments = [{
+            filename: 'logo.webp',
+            path: LOGO_PATH,
+            cid: LOGO_CID
+        }];
+    }
+
+    return options;
+};
 
 /**
  * Send eligibility check confirmation email

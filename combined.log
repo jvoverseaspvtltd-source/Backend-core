@@ -575,3 +575,19 @@
 {"level":"info","message":"✅ Professional email sent successfully to jvoverseaspvtltd@gmail.com. MessageId: <bed6059c-eb9b-68e6-71c9-d2d12cfb55d6@gmail.com>","service":"backend-service","timestamp":"2025-12-27T06:22:45.778Z"}
 {"level":"info","message":"Attempting to send eligibility email to jvoverseaspvtltd@gmail.com...","service":"backend-service","timestamp":"2025-12-27T06:22:45.780Z"}
 {"level":"info","message":"✅ Eligibility email sent successfully to jvoverseaspvtltd@gmail.com. MessageId: <993e17ab-4494-cd2f-07e1-baa23c68fe90@gmail.com>","service":"backend-service","timestamp":"2025-12-27T06:22:50.529Z"}
+{"level":"info","message":"Email configuration: Service=gmail, User=SET, Pass=SET","service":"backend-service","timestamp":"2025-12-27T06:30:55.552Z"}
+{"level":"info","message":"Logo verified at: E:\\Project\\JV_OVERSEAS\\backend-core\\assets\\logo.webp","service":"backend-service","timestamp":"2025-12-27T06:30:55.560Z"}
+{"level":"info","message":"Starting manual email test...","service":"backend-service","timestamp":"2025-12-27T06:30:55.560Z"}
+{"level":"info","message":"Attempting to send professional enquiry email to jvoverseaspvtltd@gmail.com for type: Test Service...","service":"backend-service","timestamp":"2025-12-27T06:30:55.561Z"}
+{"level":"info","message":"Email server is ready to send messages","service":"backend-service","timestamp":"2025-12-27T06:30:57.767Z"}
+{"level":"info","message":"✅ Professional email sent successfully to jvoverseaspvtltd@gmail.com. MessageId: <bbd9db02-b4b0-44a3-6d4d-3f02a4e0ff18@gmail.com>","service":"backend-service","timestamp":"2025-12-27T06:30:59.835Z"}
+{"level":"info","message":"Attempting to send eligibility email to jvoverseaspvtltd@gmail.com...","service":"backend-service","timestamp":"2025-12-27T06:30:59.836Z"}
+{"level":"info","message":"✅ Eligibility email sent successfully to jvoverseaspvtltd@gmail.com. MessageId: <519e0700-9a07-f075-1898-3ef4881c4c41@gmail.com>","service":"backend-service","timestamp":"2025-12-27T06:31:02.571Z"}
+{"level":"info","message":"Email configuration: Service=gmail, User=SET, Pass=SET","service":"backend-service","timestamp":"2025-12-27T06:42:46.871Z"}
+{"level":"info","message":"Logo verified at: E:\\Project\\JV_OVERSEAS\\backend-core\\assets\\logo.webp","service":"backend-service","timestamp":"2025-12-27T06:42:46.878Z"}
+{"level":"info","message":"Starting manual email test...","service":"backend-service","timestamp":"2025-12-27T06:42:46.878Z"}
+{"level":"info","message":"Attempting to send professional enquiry email to jvoverseaspvtltd@gmail.com for type: Test Service...","service":"backend-service","timestamp":"2025-12-27T06:42:46.879Z"}
+{"level":"info","message":"✅ Email server is ready to send messages","service":"backend-service","timestamp":"2025-12-27T06:42:48.879Z"}
+{"level":"info","message":"✅ Professional email sent successfully to jvoverseaspvtltd@gmail.com. MessageId: <17fa2c42-c9aa-d5fa-c610-b03d92ca7f2f@gmail.com>","service":"backend-service","timestamp":"2025-12-27T06:42:52.038Z"}
+{"level":"info","message":"Attempting to send eligibility email to jvoverseaspvtltd@gmail.com...","service":"backend-service","timestamp":"2025-12-27T06:42:52.040Z"}
+{"level":"info","message":"✅ Eligibility email sent successfully to jvoverseaspvtltd@gmail.com. MessageId: <16b46ee4-14fb-9b51-f9ce-088a48277efe@gmail.com>","service":"backend-service","timestamp":"2025-12-27T06:42:54.793Z"}
