@@ -2,15 +2,19 @@ const nodemailer = require('nodemailer');
 const config = require('../config/env');
 const logger = require('../utils/logger');
 const path = require('path');
+const fetch = require('node-fetch');
+const fs = require('fs');
 
 // Log configuration status (masked)
-logger.info(`Email configuration: Service=${config.emailService}, User=${config.emailUser ? 'SET' : 'MISSING'}, Pass=${config.emailPass ? 'SET' : 'MISSING'}`);
+logger.info(`Email configuration Status: User=${config.emailUser ? 'SET' : 'MISSING'}, Pass=${config.emailPass ? 'SET' : 'MISSING'}, SendGridKey=${config.sendgridApiKey ? 'SET' : 'MISSING'}`);
 
+// Create transporter using Gmail (Standard SMTP fallback)
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false, // Use STARTTLS
     pool: true,
     maxConnections: 3,
-    maxMessages: 100,
     auth: {
         user: config.emailUser,
         pass: config.emailPass,
@@ -18,35 +22,28 @@ const transporter = nodemailer.createTransport({
     tls: {
         rejectUnauthorized: false
     },
-    connectionTimeout: 20000, // Increased timeout
+    connectionTimeout: 20000,
     greetingTimeout: 15000,
     socketTimeout: 30000,
 });
 
-// Verify transporter configuration with more detail
-transporter.verify((error, success) => {
-    if (error) {
-        logger.error(`❌ Email service verification failed: ${error.message}`);
-        if (error.code) logger.error(`Error Code: ${error.code}`);
-        if (error.command) logger.error(`Command: ${error.command}`);
-        logger.warn('Emails will not be sent until the issue is resolved.');
-    } else {
-        logger.info('✅ Email server is ready to send messages');
-    }
-});
-
-const fs = require('fs');
+// Verify transporter configuration
+if (!config.sendgridApiKey) {
+    transporter.verify((error) => {
+        if (error) {
+            logger.error(`❌ SMTP Connection failed: ${error.message}`);
+            logger.warn('This is likely a firewall block. SendGrid API is recommended.');
+        } else {
+            logger.info('✅ SMTP server is ready');
+        }
+    });
+} else {
+    logger.info('🚀 SendGrid API mode enabled');
+}
 
 // Constants for branding
 const LOGO_CID = 'jv-logo';
 const LOGO_PATH = path.join(__dirname, '../../assets/logo.webp');
-
-// Verify logo existence at startup
-if (!fs.existsSync(LOGO_PATH)) {
-    logger.warn(`LOGO NOT FOUND at: ${LOGO_PATH}. Emails will be sent without logo.`);
-} else {
-    logger.info(`Logo verified at: ${LOGO_PATH}`);
-}
 
 /**
  * Standardized mail options with branding
@@ -68,6 +65,49 @@ const getBaseMailOptions = (to, subject, htmlContent) => {
     }
 
     return options;
+};
+
+/**
+ * Generic send function that chooses between SMTP and SendGrid API
+ */
+const sendMail = async (mailOptions) => {
+    if (config.sendgridApiKey) {
+        try {
+            logger.info(`Attempting SendGrid API for ${mailOptions.to}...`);
+            const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${config.sendgridApiKey}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    personalizations: [{
+                        to: [{ email: mailOptions.to }]
+                    }],
+                    from: { email: config.emailUser, name: 'JV Overseas' },
+                    subject: mailOptions.subject,
+                    content: [{
+                        type: 'text/html',
+                        value: mailOptions.html
+                    }]
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(`SendGrid API Error: ${JSON.stringify(errorData)}`);
+            }
+
+            logger.info(`✅ SendGrid API Success: ${mailOptions.to}`);
+            return { messageId: 'sendgrid-api' };
+        } catch (error) {
+            logger.error(`❌ SendGrid API failed: ${error.message}`);
+            logger.info('Falling back to SMTP...');
+            return transporter.sendMail(mailOptions);
+        }
+    } else {
+        return transporter.sendMail(mailOptions);
+    }
 };
 
 /**
@@ -101,12 +141,9 @@ const sendEligibilityConfirmation = async (userEmail, userName, isEligible, esti
         `;
 
         const mailOptions = getBaseMailOptions(userEmail, 'Loan Eligibility Check - JV Overseas', html);
-        logger.info(`Attempting to send eligibility email to ${userEmail}...`);
-        const info = await transporter.sendMail(mailOptions);
-        logger.info(`✅ Eligibility email sent: ID=${info.messageId}, Accepted=${info.accepted}, Rejected=${info.rejected}`);
+        await sendMail(mailOptions);
     } catch (error) {
-        logger.error(`❌ Eligibility email failed for ${userEmail}: ${error.message}`);
-        if (error.stack) logger.error(error.stack);
+        logger.error(`❌ Eligibility email error: ${error.message}`);
     }
 };
 
@@ -151,20 +188,16 @@ const sendProfessionalEnquiryConfirmation = async (userEmail, userName, enquiryT
         `;
 
         const mailOptions = getBaseMailOptions(userEmail, `Enquiry Received - JV Overseas`, html);
-        logger.info(`Attempting to send professional enquiry email to ${userEmail} for type: ${enquiryType}...`);
-        const info = await transporter.sendMail(mailOptions);
-        logger.info(`✅ Professional email sent: ID=${info.messageId}, Accepted=${info.accepted}, Rejected=${info.rejected}`);
+        await sendMail(mailOptions);
     } catch (error) {
-        logger.error(`❌ Professional email failed for ${userEmail}: ${error.message}`);
-        if (error.stack) logger.error(error.stack);
+        logger.error(`❌ Enquiry email error: ${error.message}`);
     }
 };
 
 module.exports = {
     sendEligibilityConfirmation,
     sendProfessionalEnquiryConfirmation,
-    // Legacy support (redirected to consolidated logic)
     sendEnquiryConfirmation: (email, name, details) => sendProfessionalEnquiryConfirmation(email, name, 'General', details),
     sendUniversityEnquiryConfirmation: (email, name, uni) => sendProfessionalEnquiryConfirmation(email, name, 'University', { university: uni }),
-    sendEmail: async (to, subject, html) => transporter.sendMail({ from: config.emailUser, to, subject, html })
+    sendEmail: async (to, subject, html) => sendMail({ to, subject, html })
 };
