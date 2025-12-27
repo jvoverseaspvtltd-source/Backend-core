@@ -30,8 +30,8 @@ module.exports = {
   jwtSecret: process.env.JWT_SECRET,
   nodeEnv,
   emailService: process.env.EMAIL_SERVICE || 'gmail',
-  emailUser: process.env.EMAIL_USER,
-  emailPass: process.env.EMAIL_PASS,
+  emailUser: process.env.EMAIL_USER?.trim(),
+  emailPass: process.env.EMAIL_PASS?.trim(),
   allowedOrigins: nodeEnv === 'development' ? ['http://localhost:3000', 'http://localhost:3001', 'http://127.0.0.1:3000', 'http://127.0.0.1:3001'] : allowedOrigins,
   superAdmin: {
     email: process.env.SUPER_ADMIN_EMAIL,

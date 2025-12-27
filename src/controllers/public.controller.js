@@ -58,11 +58,12 @@ exports.intake = async (req, res) => {
 
         // Send professional confirmation email ONLY after successful database save
         logger.info(`Sending confirmation email to ${email} for ${enquiryType}`);
-        emailService.sendProfessionalEnquiryConfirmation(email, name, enquiryType, emailDetails)
-            .then(() => {
-                logger.info(`✅ Professional confirmation email sent to ${email} for ${enquiryType}`);
-            })
-            .catch(err => logger.error(`❌ Email error for ${email}:`, err));
+        try {
+            await emailService.sendProfessionalEnquiryConfirmation(email, name, enquiryType, emailDetails);
+            logger.info(`✅ Professional confirmation email process completed for ${email}`);
+        } catch (emailErr) {
+            logger.error(`❌ Non-blocking Email error for ${email}:`, emailErr);
+        }
 
         // Return success response with saved lead data
         res.json({
@@ -209,8 +210,12 @@ exports.comprehensiveEligibility = async (req, res) => {
         await record.save();
 
         // 5. Send Confirmation
-        emailService.sendEligibilityConfirmation(emailId, fullName, isEligible, `₹30 Lakhs – ₹50 Lakhs`)
-            .catch(err => logger.error(`Email error:`, err));
+        try {
+            await emailService.sendEligibilityConfirmation(emailId, fullName, isEligible, `₹30 Lakhs – ₹50 Lakhs`);
+            logger.info(`✅ Eligibility email process completed for ${emailId}`);
+        } catch (emailErr) {
+            logger.error(`❌ Non-blocking Email error for ${emailId}:`, emailErr);
+        }
 
         // 6. Return Result with specific format
         res.json({
@@ -283,8 +288,12 @@ exports.checkEligibility = async (req, res) => {
         await record.save();
 
         // 4. Send Confirmation Email
-        emailService.sendEligibilityConfirmation(email, name, isEligible, estimatedRange)
-            .catch(err => logger.error(`Email error for ${email}:`, err));
+        try {
+            await emailService.sendEligibilityConfirmation(email, name, isEligible, estimatedRange);
+            logger.info(`✅ Simple Eligibility email process completed for ${email}`);
+        } catch (emailErr) {
+            logger.error(`❌ Non-blocking Email error for ${email}:`, emailErr);
+        }
 
         // 5. Return Result
         if (isEligible) {
