@@ -67,13 +67,12 @@ if (config.emailProvider === 'brevo-smtp' && config.brevoSmtpUser && config.brev
 
 let apiClient = null;
 
-if (config.emailProvider === 'brevo-api' || !smtpTransporter) {
+if (config.brevoApiKey) {
     apiClient = SibApiV3Sdk.ApiClient.instance;
     const apiKey = apiClient.authentications['api-key'];
     apiKey.apiKey = config.brevoApiKey;
 
-    logger.info('✅ Brevo API: Initialized');
-    logger.info(`   Sending from: ${config.emailFromAddress}`);
+    logger.info('✅ Brevo API: Initialized' + (config.emailProvider === 'brevo-api' ? ' (Primary)' : ' (Fallback Ready)'));
 }
 
 // ============================================================================
