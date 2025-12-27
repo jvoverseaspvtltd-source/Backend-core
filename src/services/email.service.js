@@ -65,14 +65,33 @@ if (config.emailProvider === 'brevo-smtp' && config.brevoSmtpUser && config.brev
 // BREVO API TRANSPORT (using Sendinblue SDK)
 // ============================================================================
 
-let apiClient = null;
+/**
+ * Helper to get a configured Brevo API instance
+ */
+const getBrevoApiInstance = () => {
+    if (!config.brevoApiKey) {
+        throw new Error('BREVO_API_KEY is not configured');
+    }
 
+    const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
+
+    // Setting API key directly on the instance (safer than global ApiClient)
+    // Usage: apiInstance.setApiKey(KeyName, KeyValue)
+    // In @sendinblue/client v3+, it uses these constants
+    try {
+        const apiKey = config.brevoApiKey;
+        apiInstance.setApiKey(SibApiV3Sdk.TransactionalEmailsApiApiKeys.apiKey, apiKey);
+    } catch (err) {
+        // Fallback if the constants are different in this version
+        apiInstance.authentications['api-key'].apiKey = config.brevoApiKey;
+    }
+
+    return apiInstance;
+};
+
+// Log readiness on startup
 if (config.brevoApiKey) {
-    apiClient = SibApiV3Sdk.ApiClient.instance;
-    const apiKey = apiClient.authentications['api-key'];
-    apiKey.apiKey = config.brevoApiKey;
-
-    logger.info('✅ Brevo API: Initialized' + (config.emailProvider === 'brevo-api' ? ' (Primary)' : ' (Fallback Ready)'));
+    logger.info('✅ Brevo API: Ready (Fallback/Primary)');
 }
 
 // ============================================================================
@@ -126,11 +145,7 @@ const sendViaSMTP = async (to, subject, htmlContent) => {
  * Send email via Brevo API
  */
 const sendViaAPI = async (to, subject, htmlContent) => {
-    if (!apiClient) {
-        throw new Error('API client not initialized');
-    }
-
-    const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
+    const apiInstance = getBrevoApiInstance();
 
     const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
     sendSmtpEmail.sender = {
