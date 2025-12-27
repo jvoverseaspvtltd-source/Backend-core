@@ -7,7 +7,6 @@ dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 const requiredEnvVars = [
   'MONGO_URI',
   'JWT_SECRET',
-  'EMAIL_PROVIDER',
   'BREVO_API_KEY'
 ];
 
@@ -31,7 +30,7 @@ module.exports = {
   nodeEnv,
 
   // Brevo Email Configuration
-  emailProvider: process.env.EMAIL_PROVIDER || 'brevo-smtp', // 'brevo-smtp' or 'brevo-api'
+  emailProvider: process.env.EMAIL_PROVIDER || 'brevo-api', // 'brevo-smtp' or 'brevo-api'
   brevoApiKey: process.env.BREVO_API_KEY?.trim(),
   brevoSmtpUser: process.env.BREVO_SMTP_USER?.trim(),
   brevoSmtpPass: process.env.BREVO_SMTP_PASS?.trim(),
