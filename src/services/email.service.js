@@ -6,7 +6,7 @@ const fetch = require('node-fetch');
 const fs = require('fs');
 
 // Log configuration status (masked)
-logger.info(`Email configuration Status: User=${config.emailUser ? 'SET' : 'MISSING'}, Pass=${config.emailPass ? 'SET' : 'MISSING'}, SendGridKey=${config.sendgridApiKey ? 'SET' : 'MISSING'}`);
+logger.info(`Email configuration Status: User=${config.emailUser ? 'SET' : 'MISSING'}, Pass=${config.emailPass ? 'SET' : 'MISSING'}, SendGridKey=${config.sendgridApiKey ? 'SET' : 'MISSING'}, BridgeUrl=${config.emailBridgeUrl ? 'SET' : 'MISSING'}`);
 
 // Create transporter using Gmail (Standard SMTP fallback)
 const transporter = nodemailer.createTransport({
@@ -28,22 +28,20 @@ const transporter = nodemailer.createTransport({
 });
 
 // Verify transporter configuration
-if (!config.sendgridApiKey) {
+// Verify transporter configuration (Soft Check)
+if (!config.sendgridApiKey && !config.emailBridgeUrl) {
     transporter.verify((error) => {
         if (error) {
-            logger.error('****************************************************************');
-            logger.error('🛑 CRITICAL ERROR: RENDER.COM IS BLOCKING GMAIL SMTP PORTS');
-            logger.error(`Error Detail: ${error.message}`);
-            logger.error('REASON: Render free tier blocks outbound ports 25, 465, and 587.');
-            logger.error('FIX: You MUST add SENDGRID_API_KEY to your Render Environment Variables.');
-            logger.error('SEE DOCS: https://render.com/docs/smtp-blocking');
-            logger.error('****************************************************************');
+            logger.warn(`⚠️ SMTP Status: Outbound Port 587 is blocked (Standard for Render Free Tier).`);
+            logger.info('💡 Tip: To enable live emails, add SENDGRID_API_KEY or EMAIL_BRIDGE_URL to Render.');
         } else {
-            logger.info('✅ SMTP server is ready (Local Environment)');
+            logger.info('✅ SMTP Status: Ready (Local Environment)');
         }
     });
+} else if (config.emailBridgeUrl) {
+    logger.info('🚀 Email Status: Bridge Mode Active (HTTP Bypass)');
 } else {
-    logger.info('🚀 SendGrid API mode enabled (Firewall Bypass Active)');
+    logger.info('🚀 Email Status: SendGrid API Mode Active (Firewall Bypass)');
 }
 
 // Constants for branding
@@ -73,9 +71,35 @@ const getBaseMailOptions = (to, subject, htmlContent) => {
 };
 
 /**
- * Generic send function that chooses between SMTP and SendGrid API
+ * Generic send function that chooses between SMTP, SendGrid API, or Google Bridge
  */
 const sendMail = async (mailOptions) => {
+    // 1. Try Email Bridge (HTTP - Bypasses Firewall) - 100% Free
+    if (config.emailBridgeUrl) {
+        try {
+            logger.info(`Using Email Bridge for ${mailOptions.to}...`);
+            const response = await fetch(config.emailBridgeUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    to: mailOptions.to,
+                    subject: mailOptions.subject,
+                    html: mailOptions.html
+                })
+            });
+            const result = await response.json();
+            if (result.status === 'success') {
+                logger.info(`✅ Bridge success for ${mailOptions.to}`);
+                return { messageId: 'bridge-success' };
+            } else {
+                throw new Error(result.message || 'Bridge response failed');
+            }
+        } catch (error) {
+            logger.error(`❌ Bridge failed: ${error.message}. Falling back...`);
+        }
+    }
+
+    // 2. Try SendGrid API
     if (config.sendgridApiKey) {
         try {
             logger.info(`Attempting SendGrid API for ${mailOptions.to}...`);
@@ -111,6 +135,7 @@ const sendMail = async (mailOptions) => {
             return transporter.sendMail(mailOptions);
         }
     } else {
+        // 3. Fallback to standard SMTP (Works locally, fails on Render Free)
         return transporter.sendMail(mailOptions);
     }
 };
@@ -146,9 +171,12 @@ const sendEligibilityConfirmation = async (userEmail, userName, isEligible, esti
         `;
 
         const mailOptions = getBaseMailOptions(userEmail, 'Loan Eligibility Check - JV Overseas', html);
-        await sendMail(mailOptions);
+        // Completely detached background task to prevent any response lag
+        setImmediate(() => {
+            sendMail(mailOptions).catch(err => logger.error(`Background Email Fail: ${err.message}`));
+        });
     } catch (error) {
-        logger.error(`❌ Eligibility email error: ${error.message}`);
+        logger.error(`❌ Eligibility email logic error: ${error.message}`);
     }
 };
 
@@ -193,9 +221,12 @@ const sendProfessionalEnquiryConfirmation = async (userEmail, userName, enquiryT
         `;
 
         const mailOptions = getBaseMailOptions(userEmail, `Enquiry Received - JV Overseas`, html);
-        await sendMail(mailOptions);
+        // Completely detached background task to prevent any response lag
+        setImmediate(() => {
+            sendMail(mailOptions).catch(err => logger.error(`Background Email Fail: ${err.message}`));
+        });
     } catch (error) {
-        logger.error(`❌ Enquiry email error: ${error.message}`);
+        logger.error(`❌ Enquiry email logic error: ${error.message}`);
     }
 };
 

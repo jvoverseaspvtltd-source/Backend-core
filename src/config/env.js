@@ -39,5 +39,6 @@ module.exports = {
   },
   crmUrl: process.env.CRM_URL || '#',
   lmsUrl: process.env.LMS_URL || '#',
-  sendgridApiKey: process.env.SENDGRID_API_KEY
+  sendgridApiKey: process.env.SENDGRID_API_KEY,
+  emailBridgeUrl: process.env.EMAIL_BRIDGE_URL
 };
