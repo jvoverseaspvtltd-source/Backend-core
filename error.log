@@ -53,3 +53,11 @@
 {"level":"error","message":"EligibilityRecord validation failed: collateral: Cast to string failed for value \"{ type: 'House', location: '', marketValue: '', ownership: '' }\" (type Object) at path \"collateral\"","service":"backend-service","timestamp":"2025-12-23T16:39:34.098Z"}
 {"level":"error","message":"EligibilityRecord validation failed: collateral: Cast to string failed for value \"{ type: 'House', location: '', marketValue: '', ownership: '' }\" (type Object) at path \"collateral\"","service":"backend-service","timestamp":"2025-12-23T16:39:34.274Z"}
 {"level":"error","message":"EligibilityRecord validation failed: collateral: Cast to string failed for value \"{ type: 'House', location: '', marketValue: '', ownership: '' }\" (type Object) at path \"collateral\"","service":"backend-service","timestamp":"2025-12-23T16:39:34.494Z"}
+{"level":"error","message":"❌ CRITICAL: BREVO_API_KEY not configured!","service":"backend-service","timestamp":"2025-12-27T11:50:28.275Z"}
+{"level":"error","message":"   Please set BREVO_API_KEY in environment variables","service":"backend-service","timestamp":"2025-12-27T11:50:28.275Z"}
+{"level":"error","message":"   Get your API key from: https://app.brevo.com/settings/keys/api","service":"backend-service","timestamp":"2025-12-27T11:50:28.276Z"}
+{"level":"error","message":"❌ All email delivery methods failed: BREVO_API_KEY is not configured","service":"backend-service","timestamp":"2025-12-27T11:50:28.279Z"}
+{"level":"error","message":"❌ CRITICAL: BREVO_API_KEY not configured!","service":"backend-service","timestamp":"2025-12-27T11:50:48.585Z"}
+{"level":"error","message":"   Please set BREVO_API_KEY in environment variables","service":"backend-service","timestamp":"2025-12-27T11:50:48.585Z"}
+{"level":"error","message":"   Get your API key from: https://app.brevo.com/settings/keys/api","service":"backend-service","timestamp":"2025-12-27T11:50:48.585Z"}
+{"level":"error","message":"❌ All email delivery methods failed: BREVO_API_KEY is not configured","service":"backend-service","timestamp":"2025-12-27T11:50:48.587Z"}

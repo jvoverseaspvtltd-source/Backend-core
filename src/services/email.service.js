@@ -31,6 +31,7 @@ if (config.emailProvider === 'brevo-smtp' && (!config.brevoSmtpUser || !config.b
 // ============================================================================
 
 let smtpTransporter = null;
+let isSmtpAvailable = false;
 
 if (config.emailProvider === 'brevo-smtp' && config.brevoSmtpUser && config.brevoSmtpPass) {
     smtpTransporter = nodemailer.createTransport({
@@ -54,9 +55,11 @@ if (config.emailProvider === 'brevo-smtp' && config.brevoSmtpUser && config.brev
             logger.error('❌ Brevo SMTP Connection Failed');
             logger.error(`   Error: ${error.message}`);
             logger.error('   Falling back to API mode for email delivery');
+            isSmtpAvailable = false;
         } else {
             logger.info('✅ Brevo SMTP: Connected and Ready');
             logger.info(`   Sending from: ${config.emailFromAddress}`);
+            isSmtpAvailable = true;
         }
     });
 }
@@ -166,31 +169,27 @@ const sendViaAPI = async (to, subject, htmlContent) => {
  * Main send function with automatic fallback
  */
 const sendMail = async (to, subject, htmlContent) => {
+    const isSmtpPreferred = config.emailProvider === 'brevo-smtp';
+
     try {
         // Try primary method based on EMAIL_PROVIDER
-        if (config.emailProvider === 'brevo-smtp' && smtpTransporter) {
-            return await sendViaSMTP(to, subject, htmlContent);
+        // Only use SMTP if it's preferred AND confirmed available
+        if (isSmtpPreferred && smtpTransporter && isSmtpAvailable) {
+            try {
+                return await sendViaSMTP(to, subject, htmlContent);
+            } catch (smtpErr) {
+                logger.warn(`⚠️  SMTP Send failed: ${smtpErr.message}. Trying API fallback...`);
+                return await sendViaAPI(to, subject, htmlContent);
+            }
         } else {
+            // Use API if it's preferred OR if SMTP is unavailable or not yet verified
+            if (isSmtpPreferred && (!isSmtpAvailable || !smtpTransporter)) {
+                logger.info('ℹ️  SMTP is unavailable or unverified, using API mode directly');
+            }
             return await sendViaAPI(to, subject, htmlContent);
         }
     } catch (primaryError) {
-        logger.warn(`⚠️  Primary method failed: ${primaryError.message}`);
-
-        // Automatic fallback
-        try {
-            if (config.emailProvider === 'brevo-smtp' && apiClient) {
-                logger.info('🔄 Falling back to API mode...');
-                return await sendViaAPI(to, subject, htmlContent);
-            } else if (config.emailProvider === 'brevo-api' && smtpTransporter) {
-                logger.info('🔄 Falling back to SMTP mode...');
-                return await sendViaSMTP(to, subject, htmlContent);
-            }
-        } catch (fallbackError) {
-            logger.error(`❌ Fallback also failed: ${fallbackError.message}`);
-            throw fallbackError;
-        }
-
-        // If no fallback available, throw original error
+        logger.error(`❌ All email delivery methods failed: ${primaryError.message}`);
         throw primaryError;
     }
 };
