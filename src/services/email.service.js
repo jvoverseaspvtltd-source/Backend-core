@@ -121,11 +121,11 @@ if (!logoExists) {
 // ============================================================================
 
 /**
- * Send email via Brevo SMTP (Nodemailer)
+ * Send email via SMTP (Gmail or Brevo)
  */
 const sendViaSMTP = async (to, subject, htmlContent) => {
-    if (!smtpTransporter) {
-        throw new Error('SMTP transport not initialized');
+    if (!transporter) {
+        throw new Error('SMTP transport not initialized or unavailable');
     }
 
     const mailOptions = {
@@ -135,7 +135,6 @@ const sendViaSMTP = async (to, subject, htmlContent) => {
         html: htmlContent,
     };
 
-    // Attach logo if exists
     if (logoExists) {
         mailOptions.attachments = [{
             filename: 'logo.webp',
@@ -144,9 +143,9 @@ const sendViaSMTP = async (to, subject, htmlContent) => {
         }];
     }
 
-    logger.info(`📧 [SMTP] Sending email to ${to}...`);
-    const info = await smtpTransporter.sendMail(mailOptions);
-    logger.info(`✅ [SMTP] Email sent: ID=${info.messageId}`);
+    logger.info(`📧 [SMTP:${providerMode}] Sending email to ${to}...`);
+    const info = await transporter.sendMail(mailOptions);
+    logger.info(`✅ [SMTP:${providerMode}] Email sent: ID=${info.messageId}`);
     return info;
 };
 
@@ -154,6 +153,9 @@ const sendViaSMTP = async (to, subject, htmlContent) => {
  * Send email via Brevo API
  */
 const sendViaAPI = async (to, subject, htmlContent) => {
+    if (!config.brevoApiKey) {
+        throw new Error('BREVO_API_KEY is not configured');
+    }
     const apiInstance = getBrevoApiInstance();
 
     const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
@@ -175,28 +177,25 @@ const sendViaAPI = async (to, subject, htmlContent) => {
  * Main send function with automatic fallback
  */
 const sendMail = async (to, subject, htmlContent) => {
-    const isSmtpPreferred = config.emailProvider === 'brevo-smtp';
-
     try {
-        // Try primary method based on EMAIL_PROVIDER
-        // Only use SMTP if it's preferred AND confirmed available
-        if (isSmtpPreferred && smtpTransporter && isSmtpAvailable) {
+        // 1. Try SMTP if a transporter is available (Gmail or Brevo SMTP)
+        if (transporter) {
             try {
                 return await sendViaSMTP(to, subject, htmlContent);
             } catch (smtpErr) {
                 logger.warn(`⚠️  SMTP Send failed: ${smtpErr.message}. Trying API fallback...`);
-                return await sendViaAPI(to, subject, htmlContent);
             }
-        } else {
-            // Use API if it's preferred OR if SMTP is unavailable or not yet verified
-            if (isSmtpPreferred && (!isSmtpAvailable || !smtpTransporter)) {
-                logger.info('ℹ️  SMTP is unavailable or unverified, using API mode directly');
-            }
+        }
+
+        // 2. Fallback to Brevo API if configured
+        if (config.brevoApiKey) {
             return await sendViaAPI(to, subject, htmlContent);
         }
-    } catch (primaryError) {
-        logger.error(`❌ All email delivery methods failed: ${primaryError.message}`);
-        throw primaryError;
+
+        throw new Error('No valid email transport configured (SMTP or API)');
+    } catch (error) {
+        logger.error(`❌ Email delivery failed: ${error.message}`);
+        throw error;
     }
 };
 
