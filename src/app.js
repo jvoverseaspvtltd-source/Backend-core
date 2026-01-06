@@ -43,8 +43,6 @@ const corsOptions = {
     optionsSuccessStatus: 200
 };
 app.use(cors(corsOptions));
-// Handle preflight for all routes
-app.options('*', cors(corsOptions));
 
 // Security Middleware
 app.use(helmet({
