@@ -9,60 +9,66 @@ const fs = require('fs');
 // CONFIGURATION VALIDATION
 // ============================================================================
 
-logger.info('🔍 Initializing Email Service...');
-logger.info(`   Provider: ${config.emailProvider}`);
-logger.info(`   Environment: ${config.nodeEnv}`);
-
-if (!config.brevoApiKey) {
-    logger.error('❌ CRITICAL: BREVO_API_KEY not configured!');
-    logger.error('   Please set BREVO_API_KEY in environment variables');
-    logger.error('   Get your API key from: https://app.brevo.com/settings/keys/api');
-}
-
-if (config.emailProvider === 'brevo-smtp' && (!config.brevoSmtpUser || !config.brevoSmtpPass)) {
-    logger.warn('⚠️  SMTP mode selected but credentials missing!');
-    logger.warn('   BREVO_SMTP_USER: ' + (config.brevoSmtpUser ? '✓' : '✗ MISSING'));
-    logger.warn('   BREVO_SMTP_PASS: ' + (config.brevoSmtpPass ? '✗ MISSING' : '✓'));
-    logger.warn('   Falling back to API mode...');
-}
-
 // ============================================================================
-// BREVO SMTP TRANSPORT (using Nodemailer)
+// EMAIL TRANSPORTERS
 // ============================================================================
 
-let smtpTransporter = null;
-let isSmtpAvailable = false;
+let transporter = null;
+let providerMode = 'none';
 
-if (config.emailProvider === 'brevo-smtp' && config.brevoSmtpUser && config.brevoSmtpPass) {
-    smtpTransporter = nodemailer.createTransport({
-        host: 'smtp-relay.brevo.com',
-        port: 587,
-        secure: false, // Use STARTTLS
-        auth: {
-            user: config.brevoSmtpUser,
-            pass: config.brevoSmtpPass,
-        },
-        connectionTimeout: 10000, // 10s timeout
-        greetingTimeout: 5000,
-        socketTimeout: 15000,
-        logger: false,
-        debug: false,
-    });
+/**
+ * Initialize the selected email transporter
+ */
+const initTransporter = () => {
+    const provider = config.emailProvider;
+    logger.info(`📧 Initializing Email Provider: ${provider}`);
 
-    // Verify SMTP connection
-    smtpTransporter.verify((error) => {
-        if (error) {
-            logger.error('❌ Brevo SMTP Connection Failed');
-            logger.error(`   Error: ${error.message}`);
-            logger.error('   Falling back to API mode for email delivery');
-            isSmtpAvailable = false;
-        } else {
-            logger.info('✅ Brevo SMTP: Connected and Ready');
-            logger.info(`   Sending from: ${config.emailFromAddress}`);
-            isSmtpAvailable = true;
+    if (provider === 'gmail') {
+        if (!config.gmailUser || !config.gmailPass) {
+            logger.warn('⚠️  Gmail credentials missing! Falling back to Brevo API if configured.');
+            return;
         }
-    });
-}
+        transporter = nodemailer.createTransport({
+            host: 'smtp.gmail.com',
+            port: 465,
+            secure: true,
+            auth: {
+                user: config.gmailUser,
+                pass: config.gmailPass
+            }
+        });
+        providerMode = 'gmail';
+    } else if (provider === 'brevo-smtp') {
+        if (!config.brevoSmtpUser || !config.brevoSmtpPass) {
+            logger.warn('⚠️  Brevo SMTP credentials missing!');
+            return;
+        }
+        transporter = nodemailer.createTransport({
+            host: 'smtp-relay.brevo.com',
+            port: 587,
+            secure: false,
+            auth: {
+                user: config.brevoSmtpUser,
+                pass: config.brevoSmtpPass
+            }
+        });
+        providerMode = 'brevo-smtp';
+    }
+
+    if (transporter) {
+        transporter.verify((error) => {
+            if (error) {
+                logger.error(`❌ ${provider} Connection Failed: ${error.message}`);
+                transporter = null;
+                providerMode = 'none';
+            } else {
+                logger.info(`✅ ${provider} Connected and Ready`);
+            }
+        });
+    }
+};
+
+initTransporter();
 
 // ============================================================================
 // BREVO API TRANSPORT (using Sendinblue SDK)
