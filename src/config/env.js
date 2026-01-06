@@ -6,9 +6,7 @@ dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 const requiredEnvVars = [
   'MONGO_URI',
-  'JWT_SECRET',
-  'JWT_SECRET',
-  'MONGO_URI'
+  'JWT_SECRET'
 ];
 
 // Check for missing env vars
@@ -17,10 +15,6 @@ const missingVars = requiredEnvVars.filter(key => !process.env[key]);
 if (missingVars.length > 0) {
   console.warn(`WARNING: Missing environment variables: ${missingVars.join(', ')}. Ensure they are set in .env`);
 }
-
-const allowedOrigins = process.env.ALLOWED_ORIGINS
-  ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim()).filter(Boolean)
-  : [];
 
 const nodeEnv = process.env.NODE_ENV || 'development';
 
@@ -32,7 +26,7 @@ module.exports = {
 
   // Email Configuration
   emailProvider: process.env.EMAIL_PROVIDER || 'gmail', // 'gmail', 'brevo-smtp', or 'brevo-api'
-  
+
   // Gmail SMTP
   gmailUser: process.env.EMAIL_USER?.trim(),
   gmailPass: process.env.EMAIL_PASS?.trim(),
@@ -44,7 +38,11 @@ module.exports = {
   emailFromName: process.env.EMAIL_FROM_NAME || 'JV Overseas',
   emailFromAddress: process.env.EMAIL_FROM_ADDRESS?.trim() || 'jvoverseaspvtltd@gmail.com',
 
-  allowedOrigins: nodeEnv === 'development' ? ['http://localhost:3000', 'http://localhost:3001', 'http://127.0.0.1:3000', 'http://127.0.0.1:3001'] : allowedOrigins,
+  allowedOrigins: nodeEnv === 'development'
+    ? ['http://localhost:3000', 'http://localhost:3001', 'http://127.0.0.1:3000', 'http://127.0.0.1:3001']
+    : (process.env.ALLOWED_ORIGINS
+      ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim()).filter(Boolean)
+      : ['https://www.jvoverseas.com', 'https://jvoverseas.com']),
   superAdmin: {
     email: process.env.SUPER_ADMIN_EMAIL,
     password: process.env.SUPER_ADMIN_PASS
