@@ -61,3 +61,5 @@
 {"level":"error","message":"   Please set BREVO_API_KEY in environment variables","service":"backend-service","timestamp":"2025-12-27T11:50:48.585Z"}
 {"level":"error","message":"   Get your API key from: https://app.brevo.com/settings/keys/api","service":"backend-service","timestamp":"2025-12-27T11:50:48.585Z"}
 {"level":"error","message":"❌ All email delivery methods failed: BREVO_API_KEY is not configured","service":"backend-service","timestamp":"2025-12-27T11:50:48.587Z"}
+{"level":"error","message":"❌ gmail Connection Failed: Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials d2e1a72fcca58-819c52f8e10sm1956547b3a.44 - gsmtp","service":"backend-service","timestamp":"2026-01-06T11:19:30.842Z"}
+{"level":"error","message":"❌ gmail Connection Failed: Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials d9443c01a7336-2a3e3c47390sm20463255ad.25 - gsmtp","service":"backend-service","timestamp":"2026-01-06T11:33:29.405Z"}
